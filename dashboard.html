@@ -1,0 +1,994 @@
+
+html_code = '''<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+	<title>Secluded Bot</title>
+	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+	<style>
+		:root {
+			--bg-body: #0d1117;
+			--bg-sidebar: #161b22;
+			--bg-header: rgba(13,17,23,0.95);
+			--bg-card: #161b22;
+			--bg-input: #0d1117;
+			--text-primary: #e6edf3;
+			--text-secondary: #7d8590;
+			--text-muted: #484f58;
+			--accent: #58a6ff;
+			--accent-hover: #79b8ff;
+			--accent-success: #3fb950;
+			--accent-warning: #d29922;
+			--accent-danger: #f85149;
+			--border: #30363d;
+			--border-hover: #8b949e;
+			--shadow: 0 8px 24px rgba(0,0,0,0.5);
+			--radius: 12px;
+			--sidebar-w: 260px;
+			--header-h: 56px;
+		}
+		[data-theme="light"] {
+			--bg-body: #f6f8fa;
+			--bg-sidebar: #ffffff;
+			--bg-header: rgba(255,255,255,0.95);
+			--bg-card: #ffffff;
+			--bg-input: #f6f8fa;
+			--text-primary: #1f2328;
+			--text-secondary: #656d76;
+			--text-muted: #afb8c1;
+			--accent: #0969da;
+			--accent-hover: #0550ae;
+			--border: #d0d7de;
+			--border-hover: #8c959f;
+			--shadow: 0 8px 24px rgba(31,35,40,0.08);
+		}
+		* { margin: 0; padding: 0; box-sizing: border-box; }
+		body {
+			font-family: 'Inter', -apple-system, sans-serif;
+			background: var(--bg-body);
+			color: var(--text-primary);
+			min-height: 100vh;
+			overflow: hidden;
+		}
+
+		.sidebar {
+			position: fixed;
+			left: 0; top: 0;
+			width: var(--sidebar-w);
+			height: 100vh;
+			background: var(--bg-sidebar);
+			border-right: 1px solid var(--border);
+			display: flex;
+			flex-direction: column;
+			z-index: 200;
+			transition: transform 0.3s ease;
+		}
+		.sidebar-brand {
+			padding: 20px 20px 12px;
+			display: flex;
+			align-items: center;
+			gap: 12px;
+			border-bottom: 1px solid var(--border);
+		}
+		.sidebar-brand-icon {
+			width: 36px; height: 36px;
+			background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+			border-radius: 10px;
+			display: flex; align-items: center; justify-content: center;
+			color: #fff; font-size: 18px;
+		}
+		.sidebar-brand-text {
+			font-size: 18px; font-weight: 700;
+			letter-spacing: -0.5px;
+		}
+		.sidebar-brand-version {
+			font-size: 10px; padding: 1px 6px;
+			background: var(--bg-body); color: var(--text-secondary);
+			border-radius: 10px; border: 1px solid var(--border);
+			margin-left: auto;
+		}
+		.sidebar-nav {
+			flex: 1;
+			padding: 12px 10px;
+			overflow-y: auto;
+		}
+		.nav-group-label {
+			font-size: 11px; font-weight: 600;
+			color: var(--text-muted);
+			text-transform: uppercase;
+			letter-spacing: 0.8px;
+			padding: 16px 12px 8px;
+		}
+		.nav-item {
+			display: flex; align-items: center; gap: 12px;
+			padding: 10px 14px;
+			border-radius: 8px;
+			cursor: pointer;
+			font-size: 14px; font-weight: 500;
+			color: var(--text-secondary);
+			transition: all 0.15s ease;
+			margin-bottom: 2px;
+			border: none; background: none; width: 100%;
+			text-align: left;
+		}
+		.nav-item:hover {
+			background: rgba(88,166,255,0.08);
+			color: var(--text-primary);
+		}
+		.nav-item.active {
+			background: rgba(88,166,255,0.12);
+			color: var(--accent);
+			font-weight: 600;
+		}
+		.nav-item i { width: 20px; text-align: center; font-size: 15px; }
+		.nav-badge {
+			margin-left: auto;
+			font-size: 11px; padding: 1px 7px;
+			background: var(--accent-danger); color: #fff;
+			border-radius: 10px; font-weight: 600;
+		}
+		.sidebar-footer {
+			padding: 12px 16px;
+			border-top: 1px solid var(--border);
+			font-size: 12px;
+			color: var(--text-muted);
+			display: flex;
+			align-items: center;
+			gap: 8px;
+		}
+		.sidebar-footer .status-dot {
+			width: 8px; height: 8px; border-radius: 50%;
+			background: var(--accent-success);
+			box-shadow: 0 0 6px var(--accent-success);
+			animation: pulse 2s infinite;
+		}
+		.sidebar-footer .status-dot.offline {
+			background: var(--accent-danger);
+			box-shadow: none; animation: none;
+		}
+
+		.header {
+			position: fixed;
+			left: var(--sidebar-w); top: 0; right: 0;
+			height: var(--header-h);
+			background: var(--bg-header);
+			backdrop-filter: blur(12px);
+			border-bottom: 1px solid var(--border);
+			display: flex; align-items: center;
+			justify-content: space-between;
+			padding: 0 24px;
+			z-index: 100;
+		}
+		.header-title {
+			font-size: 18px; font-weight: 600;
+			display: flex; align-items: center; gap: 10px;
+		}
+		.header-title i { color: var(--accent); font-size: 16px; }
+		.header-actions { display: flex; gap: 8px; align-items: center; }
+		.header-btn {
+			width: 34px; height: 34px;
+			border-radius: 8px; border: 1px solid var(--border);
+			background: transparent; color: var(--text-secondary);
+			cursor: pointer; display: flex;
+			align-items: center; justify-content: center;
+			transition: all 0.15s ease;
+		}
+		.header-btn:hover {
+			background: var(--bg-card);
+			color: var(--text-primary);
+			border-color: var(--border-hover);
+		}
+		.menu-toggle {
+			display: none;
+			width: 34px; height: 34px;
+			border-radius: 8px; border: 1px solid var(--border);
+			background: transparent; color: var(--text-secondary);
+			cursor: pointer; align-items: center; justify-content: center;
+		}
+
+		.main {
+			position: fixed;
+			left: var(--sidebar-w); top: var(--header-h);
+			right: 0; bottom: 0;
+			overflow-y: auto;
+			padding: 24px;
+		}
+		.page { display: none; animation: fadeIn 0.2s ease; }
+		.page.active { display: block; }
+		@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+		@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+		.card {
+			background: var(--bg-card);
+			border: 1px solid var(--border);
+			border-radius: var(--radius);
+			box-shadow: var(--shadow);
+			margin-bottom: 20px;
+			overflow: hidden;
+		}
+		.card-header {
+			padding: 16px 20px;
+			border-bottom: 1px solid var(--border);
+			display: flex; align-items: center; justify-content: space-between;
+			background: rgba(255,255,255,0.02);
+		}
+		.card-title {
+			font-size: 15px; font-weight: 600;
+			display: flex; align-items: center; gap: 10px;
+		}
+		.card-title i { color: var(--accent); font-size: 16px; }
+		.card-content { padding: 20px; }
+		.card-badge {
+			font-size: 11px; padding: 2px 8px;
+			background: var(--accent); color: #fff;
+			border-radius: 20px; font-weight: 600;
+		}
+
+		.input-group { display: flex; gap: 8px; margin-bottom: 12px; }
+		.input-field {
+			flex: 1;
+			padding: 10px 14px;
+			background: var(--bg-input);
+			border: 1px solid var(--border);
+			border-radius: 8px;
+			color: var(--text-primary);
+			font-size: 14px;
+			font-family: 'JetBrains Mono', monospace;
+			transition: all 0.15s ease;
+		}
+		.input-field:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(88,166,255,0.1); }
+		.input-field::placeholder { color: var(--text-muted); }
+		.textarea-field {
+			width: 100%; min-height: 80px;
+			padding: 12px 14px;
+			background: var(--bg-input);
+			border: 1px solid var(--border);
+			border-radius: 8px;
+			color: var(--text-primary);
+			font-size: 14px; resize: vertical;
+			transition: all 0.15s ease;
+			margin-bottom: 12px;
+		}
+		.textarea-field:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(88,166,255,0.1); }
+		.btn {
+			display: inline-flex; align-items: center; justify-content: center;
+			gap: 8px; padding: 10px 16px;
+			border-radius: 8px; font-size: 13px; font-weight: 600;
+			cursor: pointer; transition: all 0.15s ease;
+			border: none; white-space: nowrap;
+		}
+		.btn-primary { background: var(--accent); color: #fff; }
+		.btn-primary:hover { background: var(--accent-hover); transform: translateY(-1px); }
+		.btn-secondary { background: var(--bg-input); color: var(--text-primary); border: 1px solid var(--border); }
+		.btn-secondary:hover { background: var(--border); }
+		.btn-danger { background: rgba(248,81,73,0.1); color: var(--accent-danger); border: 1px solid rgba(248,81,73,0.2); }
+		.btn-danger:hover { background: rgba(248,81,73,0.2); }
+		.btn-icon {
+			width: 28px; height: 28px; border: none;
+			background: transparent; color: var(--text-secondary);
+			cursor: pointer; border-radius: 6px;
+			display: flex; align-items: center; justify-content: center;
+			transition: all 0.15s ease;
+		}
+		.btn-icon:hover { background: rgba(248,81,73,0.1); color: var(--accent-danger); }
+
+		.list-container { display: flex; flex-direction: column; gap: 6px; }
+		.list-item {
+			display: flex; align-items: center; justify-content: space-between;
+			padding: 10px 14px;
+			background: var(--bg-input);
+			border-radius: 8px;
+			border: 1px solid var(--border);
+			transition: all 0.15s ease;
+		}
+		.list-item:hover { border-color: var(--border-hover); }
+		.list-item-info { display: flex; align-items: center; gap: 10px; }
+		.list-item-icon {
+			width: 30px; height: 30px;
+			background: var(--bg-sidebar);
+			border-radius: 6px;
+			display: flex; align-items: center; justify-content: center;
+			color: var(--text-secondary); font-size: 12px;
+		}
+		.list-item-text { font-family: 'JetBrains Mono', monospace; font-size: 13px; }
+
+		.plugin-list { display: flex; flex-direction: column; gap: 8px; }
+		.plugin-item {
+			display: flex; align-items: center; justify-content: space-between;
+			padding: 14px 16px;
+			background: var(--bg-input);
+			border-radius: 10px;
+			border: 1px solid var(--border);
+			transition: all 0.15s ease;
+		}
+		.plugin-item:hover { border-color: var(--accent); }
+		.plugin-info { display: flex; align-items: center; gap: 12px; }
+		.plugin-icon {
+			width: 36px; height: 36px;
+			background: rgba(88,166,255,0.1);
+			border-radius: 8px;
+			display: flex; align-items: center; justify-content: center;
+			color: var(--accent); font-size: 14px;
+		}
+		.plugin-name { font-weight: 600; font-size: 14px; font-family: 'JetBrains Mono', monospace; }
+		.plugin-meta { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+		.plugin-controls { display: flex; align-items: center; gap: 12px; }
+		.toggle { position: relative; width: 40px; height: 22px; }
+		.toggle input { opacity: 0; width: 0; height: 0; }
+		.toggle-slider {
+			position: absolute; cursor: pointer;
+			top: 0; left: 0; right: 0; bottom: 0;
+			background: var(--bg-sidebar);
+			border-radius: 22px;
+			transition: 0.2s;
+			border: 1px solid var(--border);
+		}
+		.toggle-slider:before {
+			position: absolute; content: "";
+			height: 16px; width: 16px;
+			left: 2px; bottom: 2px;
+			background: white; border-radius: 50%;
+			transition: 0.2s;
+		}
+		input:checked + .toggle-slider { background: var(--accent); border-color: var(--accent); }
+		input:checked + .toggle-slider:before { transform: translateX(18px); }
+		.admin-toggle {
+			display: flex; align-items: center; gap: 6px;
+			font-size: 12px; color: var(--text-secondary);
+			cursor: pointer; padding: 4px 8px;
+			border-radius: 6px; transition: all 0.15s ease;
+		}
+		.admin-toggle:hover { background: var(--bg-sidebar); color: var(--accent-warning); }
+
+		.log-container {
+			background: #0a0c10;
+			border-radius: 8px;
+			padding: 16px;
+			font-family: 'JetBrains Mono', monospace;
+			font-size: 12px; line-height: 1.7;
+			height: calc(100vh - 220px);
+			overflow-y: auto;
+			color: #e6edf3;
+			border: 1px solid var(--border);
+		}
+		.log-container::-webkit-scrollbar { width: 6px; }
+		.log-container::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+		.log-line { margin-bottom: 2px; }
+		.log-time { color: var(--text-muted); }
+		.log-info { color: var(--accent); }
+		.log-warn { color: var(--accent-warning); }
+		.log-error { color: var(--accent-danger); }
+		.log-success { color: var(--accent-success); }
+
+		.chat-container {
+			background: #0a0c10;
+			border-radius: 8px;
+			padding: 16px;
+			height: calc(100vh - 280px);
+			overflow-y: auto;
+			border: 1px solid var(--border);
+			font-size: 14px; line-height: 1.6;
+			margin-bottom: 12px;
+		}
+		.chat-msg { margin-bottom: 12px; padding: 10px 14px; border-radius: 8px; max-width: 85%; }
+		.chat-msg.user { background: rgba(88,166,255,0.1); border: 1px solid rgba(88,166,255,0.2); margin-left: auto; }
+		.chat-msg.ai { background: var(--bg-sidebar); border: 1px solid var(--border); }
+		.chat-msg .sender { font-size: 11px; font-weight: 600; margin-bottom: 4px; color: var(--accent); }
+		.chat-msg.user .sender { color: var(--accent); }
+		.chat-msg.ai .sender { color: var(--accent-success); }
+		.chat-input-row { display: flex; gap: 10px; }
+		.chat-input-row .input-field { flex: 1; }
+
+		.status-grid {
+			display: grid;
+			grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+			gap: 12px;
+			margin-bottom: 20px;
+		}
+		.status-card {
+			background: var(--bg-card);
+			border: 1px solid var(--border);
+			border-radius: var(--radius);
+			padding: 16px 20px;
+			display: flex; align-items: center; gap: 14px;
+			transition: all 0.15s ease;
+		}
+		.status-card:hover { border-color: var(--border-hover); }
+		.status-card-icon {
+			width: 40px; height: 40px;
+			border-radius: 10px;
+			display: flex; align-items: center; justify-content: center;
+			font-size: 18px;
+		}
+		.status-card-icon.blue { background: rgba(88,166,255,0.1); color: var(--accent); }
+		.status-card-icon.green { background: rgba(63,185,80,0.1); color: var(--accent-success); }
+		.status-card-icon.orange { background: rgba(210,153,34,0.1); color: var(--accent-warning); }
+		.status-card-icon.gray { background: rgba(125,133,144,0.1); color: var(--text-secondary); }
+		.status-card-label { font-size: 12px; color: var(--text-secondary); margin-bottom: 2px; }
+		.status-card-value { font-size: 18px; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+
+		.empty-state { text-align: center; padding: 40px; color: var(--text-muted); }
+		.empty-state i { font-size: 40px; margin-bottom: 12px; }
+		.empty-state p { font-size: 13px; }
+
+		.toast {
+			position: fixed; bottom: 24px; right: 24px;
+			padding: 12px 20px;
+			background: var(--bg-card);
+			border: 1px solid var(--border);
+			border-radius: 10px;
+			box-shadow: var(--shadow);
+			display: flex; align-items: center; gap: 10px;
+			font-size: 14px; z-index: 1000;
+			transform: translateY(100px); opacity: 0;
+			transition: all 0.3s ease;
+		}
+		.toast.show { transform: translateY(0); opacity: 1; }
+		.toast-success { color: var(--accent-success); }
+		.toast-error { color: var(--accent-danger); }
+
+		.qq-avatar {
+			width: 40px; height: 40px;
+			border-radius: 50%;
+			object-fit: cover;
+			border: 2px solid var(--border);
+			background: var(--bg-input);
+		}
+		.qq-avatar-lg {
+			width: 72px; height: 72px;
+			border-radius: 50%;
+			object-fit: cover;
+			border: 3px solid var(--accent);
+			background: var(--bg-input);
+		}
+		.profile-card {
+			display: flex; align-items: center; gap: 16px;
+			padding: 20px;
+			background: var(--bg-card);
+			border: 1px solid var(--border);
+			border-radius: var(--radius);
+			margin-bottom: 20px;
+		}
+		.profile-info h3 {
+			font-size: 18px; font-weight: 600; margin-bottom: 4px;
+		}
+		.profile-info p {
+			font-size: 13px; color: var(--text-secondary); font-family: 'JetBrains Mono', monospace;
+		}
+
+		.update-info {
+			display: flex; flex-direction: column; gap: 16px;
+		}
+		.update-row {
+			display: flex; justify-content: space-between;
+			align-items: center;
+			padding: 14px 16px;
+			background: var(--bg-input);
+			border-radius: 8px;
+			border: 1px solid var(--border);
+		}
+		.update-row-label { font-size: 13px; color: var(--text-secondary); }
+		.update-row-value { font-size: 14px; font-weight: 600; font-family: 'JetBrains Mono', monospace; }
+		.update-changelog {
+			background: var(--bg-input);
+			border: 1px solid var(--border);
+			border-radius: 8px;
+			padding: 16px;
+			font-size: 14px;
+			line-height: 1.8;
+			color: var(--text-secondary);
+			max-height: 400px;
+			overflow-y: auto;
+		}
+		.update-changelog h4 {
+			color: var(--text-primary);
+			margin-bottom: 8px;
+			font-size: 14px;
+		}
+		.update-changelog ul {
+			padding-left: 20px;
+			margin-bottom: 12px;
+		}
+		.update-changelog li {
+			margin-bottom: 4px;
+		}
+		.update-status-badge {
+			display: inline-flex; align-items: center; gap: 6px;
+			padding: 4px 12px;
+			border-radius: 20px;
+			font-size: 12px; font-weight: 600;
+		}
+		.update-status-badge.up-to-date {
+			background: rgba(63,185,80,0.1); color: var(--accent-success); border: 1px solid rgba(63,185,80,0.2);
+		}
+		.update-status-badge.has-update {
+			background: rgba(210,153,34,0.1); color: var(--accent-warning); border: 1px solid rgba(210,153,34,0.2);
+		}
+
+		@media (max-width: 768px) {
+			.sidebar { transform: translateX(-100%); }
+			.sidebar.open { transform: translateX(0); }
+			.main, .header { left: 0; }
+			.menu-toggle { display: flex; }
+			.header { padding: 0 16px; }
+			.main { padding: 16px; }
+			.log-container, .chat-container { height: 50vh; }
+			.input-group { flex-wrap: wrap; }
+			.input-field { width: 100%; }
+			.btn { width: 100%; }
+			.plugin-item { flex-wrap: wrap; gap: 10px; }
+			.plugin-controls { width: 100%; justify-content: flex-end; }
+			.profile-card { flex-direction: column; text-align: center; }
+		}
+		.overlay {
+			display: none;
+			position: fixed; inset: 0;
+			background: rgba(0,0,0,0.5);
+			z-index: 150;
+		}
+		.overlay.show { display: block; }
+	</style>
+</head>
+<body>
+	<div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+
+	<aside class="sidebar" id="sidebar">
+		<div class="sidebar-brand">
+			<div class="sidebar-brand-icon"><i class="fas fa-robot"></i></div>
+			<div class="sidebar-brand-text">Secluded Bot</div>
+			<span class="sidebar-brand-version">v{{ current_version }}</span>
+		</div>
+		<nav class="sidebar-nav">
+			<div class="nav-group-label">概览</div>
+			<button class="nav-item active" onclick="switchPage('dashboard')" data-page="dashboard">
+				<i class="fas fa-chart-line"></i>仪表盘
+			</button>
+			<button class="nav-item" onclick="switchPage('plugins')" data-page="plugins">
+				<i class="fas fa-puzzle-piece"></i>插件管理
+				<span class="nav-badge" id="nav-plugin-badge">0</span>
+			</button>
+			<button class="nav-item" onclick="switchPage('logs')" data-page="logs">
+				<i class="fas fa-terminal"></i>实时日志
+			</button>
+
+			<div class="nav-group-label">管理</div>
+			<button class="nav-item" onclick="switchPage('permissions')" data-page="permissions">
+				<i class="fas fa-shield-alt"></i>权限控制
+			</button>
+			<button class="nav-item" onclick="switchPage('send')" data-page="send">
+				<i class="fas fa-paper-plane"></i>快速发信
+			</button>
+
+			<div class="nav-group-label">工具</div>
+			<button class="nav-item" onclick="switchPage('ai')" data-page="ai">
+				<i class="fas fa-comment-dots"></i>AI 助手
+			</button>
+			<button class="nav-item" onclick="switchPage('update')" data-page="update">
+				<i class="fas fa-sync-alt"></i>检查更新
+			</button>
+		</nav>
+		<div class="sidebar-footer">
+			<div class="status-dot online" id="sidebar-status-dot"></div>
+			<span id="sidebar-status-text">在线</span>
+			<span style="margin-left:auto; font-family:monospace;">{{ self_qq }}</span>
+		</div>
+	</aside>
+
+	<header class="header">
+		<div style="display:flex;align-items:center;gap:12px;">
+			<button class="menu-toggle" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+			<div class="header-title" id="header-title"><i class="fas fa-chart-line"></i>仪表盘</div>
+		</div>
+		<div class="header-actions">
+			<button class="header-btn" onclick="toggleTheme()" title="切换主题"><i class="fas fa-sun" id="theme-icon"></i></button>
+		</div>
+	</header>
+
+	<main class="main">
+
+		<div class="page active" id="page-dashboard">
+			<div class="profile-card">
+				<img class="qq-avatar-lg" id="qq-avatar" src="https://q1.qlogo.cn/g?b=qq&nk={{ self_qq }}&s=640" alt="QQ头像" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2272%22 height=%2272%22><rect width=%2272%22 height=%2272%22 fill=%22%2330363d%22/><text x=%2236%22 y=%2242%22 text-anchor=%22middle%22 fill=%22%237d8590%22 font-size=%2224%22>?</text></svg>'">
+				<div class="profile-info">
+					<h3>Secluded Bot</h3>
+					<p>QQ: {{ self_qq }} | 版本: v{{ current_version }}</p>
+				</div>
+			</div>
+			<div class="status-grid">
+				<div class="status-card">
+					<div class="status-card-icon green"><i class="fas fa-signal"></i></div>
+					<div>
+						<div class="status-card-label">运行状态</div>
+						<div class="status-card-value" id="dash-status">在线</div>
+					</div>
+				</div>
+				<div class="status-card">
+					<div class="status-card-icon blue"><i class="fas fa-clock"></i></div>
+					<div>
+						<div class="status-card-label">运行时长</div>
+						<div class="status-card-value" id="dash-uptime">--</div>
+					</div>
+				</div>
+				<div class="status-card">
+					<div class="status-card-icon orange"><i class="fas fa-plug"></i></div>
+					<div>
+						<div class="status-card-label">已加载插件</div>
+						<div class="status-card-value" id="dash-plugins">0</div>
+					</div>
+				</div>
+				<div class="status-card">
+					<div class="status-card-icon gray"><i class="fas fa-network-wired"></i></div>
+					<div>
+						<div class="status-card-label">WebSocket</div>
+						<div class="status-card-value" style="font-size:13px;" id="dash-ws">{{ ws_url }}</div>
+					</div>
+				</div>
+			</div>
+			<div class="card">
+				<div class="card-header"><div class="card-title"><i class="fas fa-info-circle"></i>关于</div></div>
+				<div class="card-content">
+					<p style="color:var(--text-secondary); font-size:14px; line-height:1.8;">
+						Secluded Bot 是一个基于 Python 的 QQ 机器人框架，支持插件化扩展。<br>
+						当前版本: <span style="color:var(--accent); font-family:monospace;">v{{ current_version }}</span><br>
+						QQ 账号: <span style="color:var(--accent); font-family:monospace;">{{ self_qq }}</span><br>
+						使用侧边栏导航到各功能模块。
+					</p>
+				</div>
+			</div>
+		</div>
+
+		<div class="page" id="page-plugins">
+			<div class="card">
+				<div class="card-header">
+					<div class="card-title"><i class="fas fa-puzzle-piece"></i>插件列表</div>
+					<span class="card-badge" id="plugin-badge">0</span>
+				</div>
+				<div class="card-content">
+					<div class="plugin-list" id="plugin-list">
+						<div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>加载中...</p></div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="page" id="page-permissions">
+			<div class="card">
+				<div class="card-header"><div class="card-title"><i class="fas fa-crown" style="color:var(--accent-warning)"></i>管理员列表</div></div>
+				<div class="card-content">
+					<div class="input-group">
+						<input type="text" class="input-field" id="new_admin" placeholder="输入QQ号...">
+						<button class="btn btn-primary" onclick="addAdmin()"><i class="fas fa-plus"></i>添加</button>
+					</div>
+					<div class="list-container" id="admin-list"></div>
+				</div>
+			</div>
+			<div class="card">
+				<div class="card-header"><div class="card-title"><i class="fas fa-user-slash" style="color:var(--accent-danger)"></i>用户黑名单</div></div>
+				<div class="card-content">
+					<div class="input-group">
+						<input type="text" class="input-field" id="new_user_black" placeholder="输入QQ号...">
+						<button class="btn btn-danger" onclick="addUserBlack()"><i class="fas fa-ban"></i>拉黑</button>
+					</div>
+					<div class="list-container" id="user-blacklist"></div>
+				</div>
+			</div>
+			<div class="card">
+				<div class="card-header"><div class="card-title"><i class="fas fa-users-slash" style="color:var(--accent-danger)"></i>群黑名单</div></div>
+				<div class="card-content">
+					<div class="input-group">
+						<input type="text" class="input-field" id="new_group_black" placeholder="输入群号...">
+						<button class="btn btn-danger" onclick="addGroupBlack()"><i class="fas fa-lock"></i>屏蔽</button>
+					</div>
+					<div class="list-container" id="group-blacklist"></div>
+				</div>
+			</div>
+		</div>
+
+		<div class="page" id="page-send">
+			<div class="card">
+				<div class="card-header"><div class="card-title"><i class="fas fa-paper-plane"></i>发送消息</div></div>
+				<div class="card-content">
+					<div style="margin-bottom:12px;">
+						<label style="font-size:12px;color:var(--text-secondary);margin-bottom:6px;display:block;">目标群号</label>
+						<input type="text" class="input-field" id="group_id" placeholder="群号" value="{{ target_group }}">
+					</div>
+					<textarea class="textarea-field" id="msg_text" placeholder="输入要发送的消息内容..."></textarea>
+					<button class="btn btn-primary" onclick="sendMsg()" style="width:100%;"><i class="fas fa-comment-dots"></i>发送消息</button>
+				</div>
+			</div>
+		</div>
+
+		<div class="page" id="page-ai">
+			<div class="card">
+				<div class="card-header"><div class="card-title"><i class="fas fa-comment-dots"></i>AI 智能助手</div></div>
+				<div class="card-content">
+					<div class="chat-container" id="ai-chat-log">
+						<div class="empty-state" style="padding:60px 20px;">
+							<i class="fas fa-robot"></i>
+							<p>开始与 AI 对话，询问机器人使用方法或插件开发</p>
+						</div>
+					</div>
+					<div class="chat-input-row">
+						<input type="text" class="input-field" id="ai-question" placeholder="输入你的问题...">
+						<button class="btn btn-primary" onclick="sendAIQuestion()"><i class="fas fa-paper-plane"></i>发送</button>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="page" id="page-update">
+			<div class="card">
+				<div class="card-header">
+					<div class="card-title"><i class="fas fa-sync-alt"></i>检查更新</div>
+					<span class="update-status-badge up-to-date" id="update-status-badge">
+						<i class="fas fa-check-circle"></i>已是最新
+					</span>
+				</div>
+				<div class="card-content">
+					<div class="update-info">
+						<div class="update-row">
+							<span class="update-row-label">当前版本</span>
+							<span class="update-row-value" id="update-current">v{{ current_version }}</span>
+						</div>
+						<div class="update-row">
+							<span class="update-row-label">最新版本</span>
+							<span class="update-row-value" id="update-latest">--</span>
+						</div>
+						<div class="update-row">
+							<span class="update-row-label">检查时间</span>
+							<span class="update-row-value" id="update-time">未检查</span>
+						</div>
+						<div style="margin-top:8px;">
+							<button class="btn btn-primary" onclick="doCheckUpdate()" id="update-btn">
+								<i class="fas fa-sync-alt"></i>立即检查
+							</button>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="card" id="changelog-card" style="display:none;">
+				<div class="card-header"><div class="card-title"><i class="fas fa-file-alt"></i>更新日志</div></div>
+				<div class="card-content">
+					<div class="update-changelog" id="update-changelog"></div>
+				</div>
+			</div>
+		</div>
+
+		<div class="page" id="page-logs">
+			<div class="card">
+				<div class="card-header">
+					<div class="card-title"><i class="fas fa-terminal"></i>实时日志</div>
+					<span style="font-size:12px;color:var(--text-secondary);">最近 50 条</span>
+				</div>
+				<div class="card-content" style="padding-top:0;">
+					<div class="log-container" id="log"></div>
+				</div>
+			</div>
+		</div>
+
+	</main>
+
+	<div class="toast" id="toast"><i class="fas fa-check-circle"></i><span id="toast-message">操作成功</span></div>
+
+	<script>
+		function switchPage(pageId) {
+			document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+			document.querySelectorAll('.nav-item[data-page]').forEach(n => n.classList.remove('active'));
+			const page = document.getElementById('page-' + pageId);
+			const nav = document.querySelector('.nav-item[data-page="' + pageId + '"]');
+			if (page) page.classList.add('active');
+			if (nav) nav.classList.add('active');
+			const titles = {
+				dashboard: ['fa-chart-line','仪表盘'],
+				plugins: ['fa-puzzle-piece','插件管理'],
+				permissions: ['fa-shield-alt','权限控制'],
+				send: ['fa-paper-plane','快速发信'],
+				ai: ['fa-comment-dots','AI 助手'],
+				update: ['fa-sync-alt','检查更新'],
+				logs: ['fa-terminal','实时日志']
+			};
+			const [icon, text] = titles[pageId] || ['fa-circle',''];
+			document.getElementById('header-title').innerHTML = '<i class="fas ' + icon + '"></i>' + text;
+			if (window.innerWidth <= 768) toggleSidebar(false);
+		}
+
+		function toggleSidebar(force) {
+			const sidebar = document.getElementById('sidebar');
+			const overlay = document.getElementById('overlay');
+			if (force === false) { sidebar.classList.remove('open'); overlay.classList.remove('show'); }
+			else { sidebar.classList.toggle('open'); overlay.classList.toggle('show'); }
+		}
+
+		function toggleTheme() {
+			const html = document.documentElement;
+			const icon = document.getElementById('theme-icon');
+			if (html.getAttribute('data-theme') === 'dark') {
+				html.setAttribute('data-theme', 'light'); icon.className = 'fas fa-moon';
+			} else {
+				html.setAttribute('data-theme', 'dark'); icon.className = 'fas fa-sun';
+			}
+		}
+
+		function showToast(msg, type) {
+			type = type || 'success';
+			const toast = document.getElementById('toast');
+			const icon = toast.querySelector('i');
+			document.getElementById('toast-message').textContent = msg;
+			icon.className = type === 'success' ? 'fas fa-check-circle toast-success' : 'fas fa-exclamation-circle toast-error';
+			toast.classList.add('show');
+			setTimeout(function() { toast.classList.remove('show'); }, 3000);
+		}
+
+		async function fetchStatus() {
+			try {
+				const res = await fetch('/api/status');
+				const data = await res.json();
+				if (data.error) return;
+
+				const online = data.connected;
+				document.getElementById('dash-status').textContent = online ? '在线' : '离线';
+				document.getElementById('dash-status').style.color = online ? 'var(--accent-success)' : 'var(--accent-danger)';
+				document.getElementById('dash-uptime').textContent = data.uptime || '0s';
+				document.getElementById('dash-plugins').textContent = data.plugins.length;
+				document.getElementById('dash-ws').textContent = '{{ ws_url }}';
+
+				const sdot = document.getElementById('sidebar-status-dot');
+				const stext = document.getElementById('sidebar-status-text');
+				sdot.className = 'status-dot ' + (online ? 'online' : 'offline');
+				stext.textContent = online ? '在线' : '离线';
+
+				document.getElementById('plugin-badge').textContent = data.plugins.length;
+				document.getElementById('nav-plugin-badge').textContent = data.plugins.length;
+				const plist = document.getElementById('plugin-list');
+				if (data.plugins.length === 0) {
+					plist.innerHTML = '<div class="empty-state"><i class="fas fa-puzzle-piece"></i><p>暂无插件</p></div>';
+				} else {
+					plist.innerHTML = '';
+					for (const name of data.plugins) {
+						const enabled = data.plugin_enabled[name] !== false;
+						const adminOnly = data.plugin_admin_only[name] === true;
+						const div = document.createElement('div');
+						div.className = 'plugin-item';
+						div.innerHTML = '<div class="plugin-info"><div class="plugin-icon"><i class="fas fa-cube"></i></div><div><div class="plugin-name">' + esc(name) + '</div><div class="plugin-meta">' + (enabled ? '已启用' : '已禁用') + ' ' + (adminOnly ? '· 管理员专用' : '') + '</div></div></div><div class="plugin-controls"><label class="admin-toggle" title="仅管理员可用"><input type="checkbox" ' + (adminOnly ? 'checked' : '') + ' onchange="setAdminOnly(\'' + esc(name) + '\', this.checked)"><i class="fas fa-crown"></i></label><label class="toggle"><input type="checkbox" ' + (enabled ? 'checked' : '') + ' onchange="togglePlugin(\'' + esc(name) + '\', this.checked)"><span class="toggle-slider"></span></label></div>';
+						plist.appendChild(div);
+					}
+				}
+
+				updateList('admin-list', data.admin_list, 'user-check', 'removeAdmin', '管理员');
+				updateList('user-blacklist', data.user_blacklist, 'user-minus', 'removeUserBlack', '用户');
+				updateList('group-blacklist', data.group_blacklist, 'ban', 'removeGroupBlack', '群');
+
+				const logDiv = document.getElementById('log');
+				logDiv.innerHTML = data.log_lines.map(function(l) { return fmtLog(l); }).join('');
+				logDiv.scrollTop = logDiv.scrollHeight;
+			} catch(e) { console.error(e); }
+		}
+
+		function updateList(id, items, icon, removeFn, type) {
+			const el = document.getElementById(id);
+			if (!items || items.length === 0) {
+				el.innerHTML = '<div class="empty-state" style="padding:20px;"><p style="font-size:12px;">暂无' + type + '</p></div>';
+			} else {
+				el.innerHTML = '';
+				for (const item of items) {
+					const div = document.createElement('div');
+					div.className = 'list-item';
+					div.innerHTML = '<div class="list-item-info"><div class="list-item-icon"><i class="fas fa-' + icon + '"></i></div><span class="list-item-text">' + esc(item) + '</span></div><button class="btn-icon" onclick="' + removeFn + '(\'' + esc(item) + '\')" title="移除"><i class="fas fa-trash-alt"></i></button>';
+					el.appendChild(div);
+				}
+			}
+		}
+
+		function fmtLog(line) {
+			const m = line.match(/^\[(.*?)\] \[(.*?)\] (.*)$/);
+			if (!m) return '<div class="log-line">' + esc(line) + '</div>';
+			const time = m[1], level = m[2], msg = m[3];
+			const cls = {INFO:'log-info',WARN:'log-warn',ERROR:'log-error',SUCCESS:'log-success'}[level] || '';
+			return '<div class="log-line"><span class="log-time">[' + time + ']</span> <span class="' + cls + '">[' + level + ']</span> ' + esc(msg) + '</div>';
+		}
+		function esc(s) { return (s||'').replace(/[&<>]/g, function(c) { return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c]; }); }
+
+		async function togglePlugin(name, enable) {
+			await fetch('/api/enable_plugin', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({name:name, enable:enable})});
+			showToast((enable?'启用':'禁用') + '插件成功'); fetchStatus();
+		}
+		async function setAdminOnly(name, v) {
+			await fetch('/api/set_plugin_admin', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({name:name, admin_only:v})});
+			showToast('权限已更新'); fetchStatus();
+		}
+		async function addAdmin() {
+			const qq = document.getElementById('new_admin').value.trim(); if(!qq) return;
+			await fetch('/api/add_admin', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({qq:qq})});
+			document.getElementById('new_admin').value = ''; showToast('已添加'); fetchStatus();
+		}
+		async function removeAdmin(qq) {
+			await fetch('/api/remove_admin', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({qq:qq})});
+			showToast('已移除'); fetchStatus();
+		}
+		async function addUserBlack() {
+			const qq = document.getElementById('new_user_black').value.trim(); if(!qq) return;
+			await fetch('/api/add_user_blacklist', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({qq:qq})});
+			document.getElementById('new_user_black').value = ''; showToast('已拉黑'); fetchStatus();
+		}
+		async function removeUserBlack(qq) {
+			await fetch('/api/remove_user_blacklist', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({qq:qq})});
+			showToast('已解除'); fetchStatus();
+		}
+		async function addGroupBlack() {
+			const g = document.getElementById('new_group_black').value.trim(); if(!g) return;
+			await fetch('/api/add_group_blacklist', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({group:g})});
+			document.getElementById('new_group_black').value = ''; showToast('已屏蔽'); fetchStatus();
+		}
+		async function removeGroupBlack(g) {
+			await fetch('/api/remove_group_blacklist', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({group:g})});
+			showToast('已解除'); fetchStatus();
+		}
+		async function sendMsg() {
+			const gid = document.getElementById('group_id').value;
+			const text = document.getElementById('msg_text').value;
+			if (!text) return;
+			const res = await fetch('/api/send', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({group_id:gid, text:text})});
+			const data = await res.json();
+			if (data.success) { document.getElementById('msg_text').value = ''; showToast('已发送'); }
+			else showToast(data.error || '发送失败', 'error');
+		}
+
+		async function doCheckUpdate() {
+			const btn = document.getElementById('update-btn');
+			const icon = btn.querySelector('i');
+			btn.disabled = true;
+			icon.className = 'fas fa-spinner fa-spin';
+			
+			try {
+				const res = await fetch('/api/check_update', {method:'POST'});
+				const data = await res.json();
+				
+				document.getElementById('update-time').textContent = new Date().toLocaleString('zh-CN');
+				
+				if (data.has_update) {
+					document.getElementById('update-latest').textContent = 'v' + data.latest_version;
+					document.getElementById('update-status-badge').className = 'update-status-badge has-update';
+					document.getElementById('update-status-badge').innerHTML = '<i class="fas fa-arrow-up"></i>有更新可用';
+					
+					if (data.changelog) {
+						document.getElementById('changelog-card').style.display = 'block';
+						document.getElementById('update-changelog').innerHTML = data.changelog;
+					}
+					showToast('发现新版本: v' + data.latest_version, 'success');
+				} else {
+					document.getElementById('update-latest').textContent = 'v{{ current_version }}';
+					document.getElementById('update-status-badge').className = 'update-status-badge up-to-date';
+					document.getElementById('update-status-badge').innerHTML = '<i class="fas fa-check-circle"></i>已是最新';
+					document.getElementById('changelog-card').style.display = 'none';
+					showToast('当前已是最新版本');
+				}
+			} catch(e) {
+				showToast('检查更新失败', 'error');
+			} finally {
+				btn.disabled = false;
+				icon.className = 'fas fa-sync-alt';
+			}
+		}
+
+		async function sendAIQuestion() {
+			const q = document.getElementById('ai-question').value.trim(); if(!q) return;
+			const log = document.getElementById('ai-chat-log');
+			if (log.querySelector('.empty-state')) log.innerHTML = '';
+			log.innerHTML += '<div class="chat-msg user"><div class="sender">你</div>' + esc(q) + '</div>';
+			document.getElementById('ai-question').value = '';
+			log.scrollTop = log.scrollHeight;
+			const res = await fetch('/api/ai_chat', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({question:q})});
+			const data = await res.json();
+			log.innerHTML += '<div class="chat-msg ai"><div class="sender">AI</div>' + (data.reply ? esc(data.reply) : '<span style="color:var(--accent-danger)">' + esc(data.error||'未知错误') + '</span>') + '</div>';
+			log.scrollTop = log.scrollHeight;
+		}
+		document.getElementById('ai-question').addEventListener('keypress', function(e) { if(e.key==='Enter') sendAIQuestion(); });
+
+		setInterval(fetchStatus, 3000);
+		fetchStatus();
+	</script>
+</body>
+</html>'''
+
