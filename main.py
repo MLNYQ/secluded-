@@ -59,6 +59,21 @@ def load_config():
         if not value or value == "请填写":
             print(f"错误：配置文件 {CONFIG_FILE} 中的 {key} 未填写，请修改后重启。")
             sys.exit(0)
+    defaults = {
+        "AUTO_UPDATE": True,
+        "UPDATE_URL": "http://cj.slyun14.top/version.json",
+        "PLUGIN_DIR": "BOT",
+        "WEB_PORT": 5000,
+        "PLUGIN_ID": "secluded.plugin.termux",
+        "PLUGIN_NAME": "termux-bot",
+        "TARGET_GROUP": "",
+        "SELF_QQ": "",
+        "WEB_PASSWORD": "",
+        "API_TOKEN": ""
+    }
+    for k, v in defaults.items():
+        if k not in config:
+            config[k] = v
     return config
 
 config = load_config()
@@ -215,6 +230,11 @@ def check_and_update(manual=False):
             with open(new_file, "wb") as f:
                 for chunk in r.iter_content(chunk_size=8192):
                     f.write(chunk)
+        file_size = os.path.getsize(new_file)
+        if file_size < 1000:
+            log("下载文件大小异常，放弃更新", "ERROR")
+            os.remove(new_file)
+            return
         if "md5" in data:
             md5 = hashlib.md5(open(new_file, "rb").read()).hexdigest()
             if md5 != data["md5"]:
@@ -236,9 +256,8 @@ def check_and_update(manual=False):
         shutil.copy(sys.argv[0], backup_file)
         log(f"已备份当前版本到 {backup_file}", "INFO")
         os.replace(new_file, sys.argv[0])
-        log("更新完成，3秒后重启...", "INFO")
-        time.sleep(3)
-        os.execv(sys.executable, [sys.executable] + sys.argv)
+        log("更新完成，进程即将退出，将由 start.sh 自动重启", "INFO")
+        sys.exit(0)
     except Exception as e:
         log(f"自动更新失败: {e}", "ERROR")
 
